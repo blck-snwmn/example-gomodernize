@@ -19,7 +19,7 @@ jobs:
         id: modernize
         run: |
           # Run modernize with diff mode to see potential changes
-          OUTPUT=$(go tool modernize -test -diff ./...)
+          OUTPUT=$(go tool modernize -test -diff ./... || true)
           echo "$OUTPUT" > modernize_output.txt
           
           # Check if there are any differences
