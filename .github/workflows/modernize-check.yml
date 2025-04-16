@@ -17,9 +17,10 @@ jobs:
 
       - name: Check code with modernize
         id: modernize
+        continue-on-error: true
         run: |
           # Run modernize with diff mode to see potential changes
-          OUTPUT=$(go tool modernize -test -diff ./... || true)
+          OUTPUT=$(go tool modernize -test -diff ./...)
           echo "$OUTPUT" > modernize_output.txt
           
           # Check if there are any differences
