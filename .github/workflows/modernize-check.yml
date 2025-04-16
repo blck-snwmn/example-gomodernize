@@ -19,19 +19,30 @@ jobs:
         id: run_modernize
         run: |
           # Run modernize with diff mode to see potential changes
-          go tool modernize -test -diff ./... > modernize_output.txt || true
+          # 標準出力と標準エラー出力の両方をキャプチャ
+          go tool modernize -test -diff ./... > modernize_output.txt 2>&1 || true
+          
+          # 内容を表示してデバッグ
+          echo "===== modernize output ====="
+          cat modernize_output.txt
+          echo "===== end of output ====="
 
       - name: Check for differences
         id: check_diff
         run: |
-          # Check if there are any differences
-          if [ -s modernize_output.txt ]; then
+          # grepを使って差分があるかどうかをチェック
+          if grep -q "^-" modernize_output.txt || grep -q "^+" modernize_output.txt; then
             echo "modernize found differences"
             echo "HAS_DIFF=true" >> $GITHUB_OUTPUT
           else
-            echo "No differences found"
+            echo "No differences found in grep check"
             echo "HAS_DIFF=false" >> $GITHUB_OUTPUT
           fi
+          
+          # デバッグ用にファイルサイズも確認
+          echo "File size: $(wc -c < modernize_output.txt) bytes"
+          echo "File content preview:"
+          head -n 20 modernize_output.txt
 
       - name: Generate summary
         if: steps.check_diff.outputs.HAS_DIFF == 'true'
