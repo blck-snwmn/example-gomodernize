@@ -1,0 +1,46 @@
+name: Go Modernize Check
+
+on:
+  push:
+
+jobs:
+  modernize:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          check-latest: true
+
+      - name: Check code with modernize
+        id: modernize
+        run: |
+          # Run modernize with diff mode to see potential changes
+          OUTPUT=$(go tool modernize -test -diff ./...)
+          echo "$OUTPUT" > modernize_output.txt
+          
+          # Check if there are any differences
+          if [ -s modernize_output.txt ]; then
+            echo "HAS_DIFF=true" >> $GITHUB_OUTPUT
+          else
+            echo "HAS_DIFF=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Generate summary
+        if: steps.modernize.outputs.HAS_DIFF == 'true'
+        run: |
+          echo "## Go Modernize Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "modernizeツールが以下の改善点を検出しました。コードをより最新のGo機能を活用するように更新することを検討してください。" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo '```diff' >> $GITHUB_STEP_SUMMARY
+          cat modernize_output.txt >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "変更を適用するには以下のコマンドを実行してください：" >> $GITHUB_STEP_SUMMARY
+          echo '```bash' >> $GITHUB_STEP_SUMMARY
+          echo "go tool modernize -test -fix ./..." >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY 
