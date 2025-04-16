@@ -21,17 +21,27 @@ jobs:
         run: |
           # Run modernize with diff mode to see potential changes
           OUTPUT=$(go tool modernize -test -diff ./...)
+          EXIT_CODE=$?
+          
+          # Save output to file
           echo "$OUTPUT" > modernize_output.txt
           
           # Check if there are any differences
           if [ -s modernize_output.txt ]; then
+            echo "modernize found differences"
             echo "HAS_DIFF=true" >> $GITHUB_OUTPUT
           else
+            echo "No differences found"
             echo "HAS_DIFF=false" >> $GITHUB_OUTPUT
+          fi
+          
+          # If there are differences, exit with error code to mark this step as failed
+          if [ -s modernize_output.txt ]; then
+            exit 1
           fi
 
       - name: Generate summary
-        if: steps.modernize.outputs.HAS_DIFF == 'true'
+        if: steps.modernize.outcome == 'failure'
         run: |
           echo "## Go Modernize Results" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
