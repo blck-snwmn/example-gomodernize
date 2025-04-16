@@ -15,17 +15,15 @@ jobs:
           go-version-file: go.mod
           check-latest: true
 
-      - name: Check code with modernize
-        id: modernize
-        continue-on-error: true
+      - name: Run modernize tool
+        id: run_modernize
         run: |
           # Run modernize with diff mode to see potential changes
-          OUTPUT=$(go tool modernize -test -diff ./...)
-          EXIT_CODE=$?
-          
-          # Save output to file
-          echo "$OUTPUT" > modernize_output.txt
-          
+          go tool modernize -test -diff ./... > modernize_output.txt || true
+
+      - name: Check for differences
+        id: check_diff
+        run: |
           # Check if there are any differences
           if [ -s modernize_output.txt ]; then
             echo "modernize found differences"
@@ -34,14 +32,9 @@ jobs:
             echo "No differences found"
             echo "HAS_DIFF=false" >> $GITHUB_OUTPUT
           fi
-          
-          # If there are differences, exit with error code to mark this step as failed
-          if [ -s modernize_output.txt ]; then
-            exit 1
-          fi
 
       - name: Generate summary
-        if: steps.modernize.outcome == 'failure'
+        if: steps.check_diff.outputs.HAS_DIFF == 'true'
         run: |
           echo "## Go Modernize Results" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
