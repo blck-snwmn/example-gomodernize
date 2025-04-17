@@ -42,6 +42,17 @@ go tool modernize -test -diff ./...
 
 This shows a unified diff of the changes that would be applied.
 
+## Continuous Integration
+
+This project includes a GitHub Actions workflow (`.github/workflows/modernize-check.yml`) that automatically runs the modernize tool on each push and generates a summary of any potential improvements in the GitHub Actions output. This helps maintain awareness of code that could be modernized without immediately breaking the build.
+
+The workflow will:
+1. Run the modernize tool with the `-diff` option
+2. If differences are found, output them to the GitHub Actions summary page
+3. Show the command needed to apply the suggested changes
+
+This helps team members stay aware of potential modernizations while making the decision to apply them at their convenience.
+
 ## Requirements
 
 - Go 1.24 or later is recommended to leverage all modernization features.
